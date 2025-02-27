@@ -2,16 +2,16 @@ JOB_NAME = "7b_pretrain"
 DO_ALERT = False
 
 SAVE_CKPT_FOLDER = "local:ckpts/7b_pretrain"  # checkpoint 的保存路径
-CHECKPOINT_EVERY = 100  # 每过多少步保存一次 checkpoint
-VALID_EVERY = 100  # 每过多少步验证一次
+CHECKPOINT_EVERY = 1000  # 每过多少步保存一次 checkpoint
+VALID_EVERY = 1000  # 每过多少步验证一次
 TRAIN_FOLDER = "data/train"  # 训练数据的路径
 VALID_FOLDER = "data/val"  # 验证数据的路径
 ENABLE_TENSORBOARD = True  # 是否启用 TensorBoard
 LOG_DIR = "logs"  # TensorBoard 日志文件夹
 
 # 以下配置项定义了模型的结构（参数量）
-SEQ_LEN = 2048
-HIDDEN_SIZE = 4096
+SEQ_LEN = 1024
+HIDDEN_SIZE = 2048
 NUM_ATTENTION_HEAD = 32
 MLP_RATIO = 8 / 3
 NUM_LAYER = 32
@@ -34,7 +34,7 @@ data = dict(
     # micro_num means the number of micro_batch contained in one gradient update
     micro_num=4,
     # packed_length = micro_bsz * SEQ_LEN
-    micro_bsz=2,
+    micro_bsz=1,
     # defaults to the value of micro_num
     valid_micro_num=4,
     # defaults to 0, means disable evaluate
@@ -134,11 +134,19 @@ pipeline parallel (dict):
     2. interleaved_overlap: bool, enable/disable communication overlap when using interleaved pipeline scheduler.
 tensor parallel: tensor parallel size, usually the number of GPUs per node.
 """
+# parallel = dict(
+#     zero1=1,
+#     pipeline=dict(size=1, interleaved_overlap=True),
+#     sequence_parallel=False,
+# )
 parallel = dict(
-    zero1=8,
+    zero1=dict(size=1),
+    # tensor=dict(size=1, mode="mtp"),
     pipeline=dict(size=1, interleaved_overlap=True),
+    # weight=dict(size=1, overlap=True),
     sequence_parallel=False,
 )
+
 
 cudnn_deterministic = False
 cudnn_benchmark = False
